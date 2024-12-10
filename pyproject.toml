@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "static-site-gen"
+version = "0.1.0"
+requires-python = ">=3.8"
+authors = [
+  {name="Teemu Mahlamäki", email="thoogs@pm.me"}
+]
+dependencies = [
+  "pytest"
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/static_site_gen"]
