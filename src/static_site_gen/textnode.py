@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class TextType(Enum):
     MD_TEXT = "text"
     MD_BOLD = "bold"
@@ -8,16 +9,19 @@ class TextType(Enum):
     MD_LINK = "link"
     MD_IMAGE = "image"
 
-class TextNode():
+
+class TextNode:
     def __init__(self, text: str, text_type: str, url: str = None):
         self.text = text
         self.text_type = text_type
         self.url = url
 
     def __eq__(self, other):
-        if (self.text == other.text and
-            self.text_type == other.text_type and
-            self.url == other.url):
+        if (
+            self.text == other.text
+            and self.text_type == other.text_type
+            and self.url == other.url
+        ):
             return True
         return False
 
