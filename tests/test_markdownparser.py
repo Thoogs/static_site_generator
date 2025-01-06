@@ -6,6 +6,7 @@ from static_site_gen.markdownparser import (
     split_nodes_images,
     split_nodes_links,
     text_to_textnodes,
+    markdown_to_blocks,
 )
 from static_site_gen.textnode import TextNode, TextType
 
@@ -243,3 +244,41 @@ def test_text_to_textnode():
         TextNode("link", TextType.MD_LINK, "https://boot.dev"),
     ]
     assert new_nodes == expected
+
+
+def test_markdown_to_blocks():
+    markdown_doc = "# heading\n\nParagraph text within the document\nThat can span multiple lines\n\n* list item 1\n* list item 2\n"
+    expected = [
+        "# heading",
+        "Paragraph text within the document\nThat can span multiple lines",
+        "* list item 1\n* list item 2",
+    ]
+    assert markdown_to_blocks(markdown_doc) == expected
+
+
+def test_markdown_to_blocks_extra_newlines_and_space():
+    markdown_doc = "# heading\n\n\n\n\n     Paragraph text within the document\nThat can span multiple lines                  \n\n* list item 1\n* list item 2\n"
+    expected = [
+        "# heading",
+        "Paragraph text within the document\nThat can span multiple lines",
+        "* list item 1\n* list item 2",
+    ]
+    assert markdown_to_blocks(markdown_doc) == expected
+
+
+def test_markdown_to_blocks_multiline_str():
+    markdown_doc = """
+This is **bolded** paragraph
+
+This is another paragraph with *italic* text and `code` here
+This is the same paragraph on a new line
+
+* This is a list
+* with items
+    """
+    expected = [
+        "This is **bolded** paragraph",
+        "This is another paragraph with *italic* text and `code` here\nThis is the same paragraph on a new line",
+        "* This is a list\n* with items",
+    ]
+    assert markdown_to_blocks(markdown_doc) == expected

@@ -93,8 +93,8 @@ def split_element(text: str, element: tuple, nodes: list, element_type: TextType
     return text
 
 
-def text_to_textnodes(text: str) -> list:
-    origin_node = TextNode(text, TextType.MD_TEXT)
+def text_to_textnodes(inline_markdown: str) -> list:
+    origin_node = TextNode(inline_markdown, TextType.MD_TEXT)
     textnodes = [origin_node]
     textnodes = split_nodes_links(textnodes)
     textnodes = split_nodes_images(textnodes)
@@ -102,3 +102,14 @@ def text_to_textnodes(text: str) -> list:
     textnodes = split_nodes_delimiter(textnodes, "*", TextType.MD_ITALIC)
     textnodes = split_nodes_delimiter(textnodes, "`", TextType.MD_CODE)
     return textnodes
+
+
+def markdown_to_blocks(markdown_document: str) -> list:
+    raw_blocks = markdown_document.split("\n\n")
+    cleaned_blocks = []
+    for block in raw_blocks:
+        block = block.strip()
+        if len(block) == 0:
+            continue
+        cleaned_blocks.append(block)
+    return cleaned_blocks
