@@ -16,7 +16,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "ruff",
-  "mypy"
+  "mypy",
+  "pre-commit"
 ]
 
 [tool.hatch.build.targets.wheel]
