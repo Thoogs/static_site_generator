@@ -1,5 +1,12 @@
 import pytest
-from static_site_gen.markdownparser import split_nodes_delimiter
+from static_site_gen.markdownparser import (
+    split_nodes_delimiter,
+    extract_markdown_images,
+    extract_markdown_links,
+    split_nodes_images,
+    split_nodes_links,
+    text_to_textnodes,
+)
 from static_site_gen.textnode import TextNode, TextType
 
 
@@ -114,3 +121,125 @@ def test_split_nodes_delimiter_invalid_markdown():
     delimiter = "`"
     with pytest.raises(SyntaxError, match="Invalid markdown syntax"):
         split_nodes_delimiter(old_node, delimiter, TextType.MD_CODE)
+
+
+def test_extract_markdown_image():
+    text = "Here is an ![image of images](google.com)"
+    images = extract_markdown_images(text)
+    assert images == [("image of images", "google.com")]
+
+
+def test_extract_markdown_image_multiple():
+    text = "Here is an ![image of images](google.com) and there is also a ![rick roll](rickroll.com)"
+    images = extract_markdown_images(text)
+    assert images == [("image of images", "google.com"), ("rick roll", "rickroll.com")]
+
+
+def test_extract_markdown_links():
+    text = "Here is [google](google.com)"
+    links = extract_markdown_links(text)
+    assert links == [("google", "google.com")]
+
+
+def test_extract_markdown_links_multiple():
+    text = "Here is [google](google.com) and there is also [youtube](youtube.com)"
+    links = extract_markdown_links(text)
+    assert links == [("google", "google.com"), ("youtube", "youtube.com")]
+
+
+def test_extract_markdown_links_and_images():
+    text = (
+        "Here is [google](google.com) and there is also ![youtube image](youtube.com)"
+    )
+    links = extract_markdown_links(text)
+    images = extract_markdown_images(text)
+    assert links == [("google", "google.com")]
+    assert images == [("youtube image", "youtube.com")]
+
+
+def test_split_nodes_links():
+    node = [
+        TextNode(
+            "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)",
+            TextType.MD_TEXT,
+        )
+    ]
+    new_nodes = split_nodes_links(node)
+    expected = [
+        TextNode("This is text with a link ", TextType.MD_TEXT),
+        TextNode("to boot dev", TextType.MD_LINK, "https://www.boot.dev"),
+        TextNode(" and ", TextType.MD_TEXT),
+        TextNode("to youtube", TextType.MD_LINK, "https://www.youtube.com/@bootdotdev"),
+    ]
+    assert new_nodes == expected
+
+
+def test_split_nodes_images():
+    nodes = [
+        TextNode(
+            "This is text with an image ![to boot dev](https://www.boot.dev) and ![to youtube](https://www.youtube.com/@bootdotdev)",
+            TextType.MD_TEXT,
+        )
+    ]
+    new_nodes = split_nodes_images(nodes)
+    expected = [
+        TextNode("This is text with an image ", TextType.MD_TEXT),
+        TextNode("to boot dev", TextType.MD_IMAGE, "https://www.boot.dev"),
+        TextNode(" and ", TextType.MD_TEXT),
+        TextNode(
+            "to youtube", TextType.MD_IMAGE, "https://www.youtube.com/@bootdotdev"
+        ),
+    ]
+    assert new_nodes == expected
+
+
+def test_split_nodes_images_and_links():
+    nodes = [
+        TextNode(
+            "This is text with an image ![to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)",
+            TextType.MD_TEXT,
+        )
+    ]
+    new_nodes = split_nodes_images(nodes)
+    new_nodes = split_nodes_links(new_nodes)
+    expected = [
+        TextNode("This is text with an image ", TextType.MD_TEXT),
+        TextNode("to boot dev", TextType.MD_IMAGE, "https://www.boot.dev"),
+        TextNode(" and ", TextType.MD_TEXT),
+        TextNode("to youtube", TextType.MD_LINK, "https://www.youtube.com/@bootdotdev"),
+    ]
+    assert new_nodes == expected
+
+
+def test_split_nodes_single_image_node():
+    nodes = [
+        TextNode(
+            "![to boot dev](https://www.boot.dev)",
+            TextType.MD_TEXT,
+        )
+    ]
+    new_nodes = split_nodes_images(nodes)
+    expected = [
+        TextNode("to boot dev", TextType.MD_IMAGE, "https://www.boot.dev"),
+    ]
+    assert new_nodes == expected
+
+
+def test_text_to_textnode():
+    text = "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+    new_nodes = text_to_textnodes(text)
+    expected = [
+        TextNode("This is ", TextType.MD_TEXT),
+        TextNode("text", TextType.MD_BOLD),
+        TextNode(" with an ", TextType.MD_TEXT),
+        TextNode("italic", TextType.MD_ITALIC),
+        TextNode(" word and a ", TextType.MD_TEXT),
+        TextNode("code block", TextType.MD_CODE),
+        TextNode(" and an ", TextType.MD_TEXT),
+        TextNode(
+            "obi wan image", TextType.MD_IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"
+        ),
+        TextNode(" and a ", TextType.MD_TEXT),
+        TextNode("link", TextType.MD_LINK, "https://boot.dev"),
+    ]
+    assert new_nodes == expected
