@@ -1,6 +1,16 @@
 import re
+from enum import Enum
 
 from static_site_gen.textnode import TextType, TextNode
+
+
+class MarkdownBlockType(Enum):
+    HEADING = "heading"
+    PARAGRAPH = "paragraph"
+    CODE = "code"
+    QUOTE = "quote"
+    UO_LIST = "unordered list"
+    O_LIST = "ordered list"
 
 
 def split_nodes_delimiter(old_nodes: list, delimiter: str, text_type: TextType) -> list:
@@ -113,3 +123,52 @@ def markdown_to_blocks(markdown_document: str) -> list:
             continue
         cleaned_blocks.append(block)
     return cleaned_blocks
+
+
+def block_to_block_type(markdown_block: str) -> MarkdownBlockType:
+    block_type = MarkdownBlockType.PARAGRAPH
+    if is_heading(markdown_block):
+        block_type = MarkdownBlockType.HEADING
+    elif is_code(markdown_block):
+        block_type = MarkdownBlockType.CODE
+    elif is_quote(markdown_block):
+        block_type = MarkdownBlockType.QUOTE
+    elif is_unordered_list(markdown_block):
+        block_type = MarkdownBlockType.UO_LIST
+    elif is_ordered_list(markdown_block):
+        block_type = MarkdownBlockType.O_LIST
+    return block_type
+
+
+def is_heading(markdown_block: str) -> bool:
+    heading_pattern = r"^#{1,6}\ \w"
+    if re.search(heading_pattern, markdown_block) is None:
+        return False
+    return True
+
+
+def is_code(markdown_block: str) -> bool:
+    return markdown_block.startswith("```") and markdown_block.endswith("```")
+
+
+def is_quote(markdown_block: str) -> bool:
+    for line in markdown_block.split("\n"):
+        if not line.startswith("> "):
+            return False
+    return True
+
+
+def is_unordered_list(markdown_block: str) -> bool:
+    for line in markdown_block.split("\n"):
+        print(line)
+        if not line.startswith("- ") and not line.startswith("* "):
+            return False
+    return True
+
+
+def is_ordered_list(markdown_block: str) -> bool:
+    markdown_lines = markdown_block.split("\n")
+    for idx in range(len(markdown_lines)):
+        if not markdown_lines[idx].startswith(f"{idx+1}. "):
+            return False
+    return True

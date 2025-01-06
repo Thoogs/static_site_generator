@@ -1,4 +1,5 @@
 import pytest
+
 from static_site_gen.markdownparser import (
     split_nodes_delimiter,
     extract_markdown_images,
@@ -7,6 +8,8 @@ from static_site_gen.markdownparser import (
     split_nodes_links,
     text_to_textnodes,
     markdown_to_blocks,
+    block_to_block_type,
+    MarkdownBlockType,
 )
 from static_site_gen.textnode import TextNode, TextType
 
@@ -282,3 +285,49 @@ This is the same paragraph on a new line
         "* This is a list\n* with items",
     ]
     assert markdown_to_blocks(markdown_doc) == expected
+
+
+def test_block_to_block_type():
+    markdown_block = "# Heading"
+    assert block_to_block_type(markdown_block.strip()) == MarkdownBlockType.HEADING
+    markdown_block = "#### Heading"
+    assert block_to_block_type(markdown_block.strip()) == MarkdownBlockType.HEADING
+
+
+def test_block_to_block_type_code():
+    markdown_block = """
+```print('hello world')```
+    """
+    assert block_to_block_type(markdown_block.strip()) == MarkdownBlockType.CODE
+
+
+def test_block_to_block_type_unordered_list():
+    markdown_block = """
+* This is a list
+* with items
+    """
+    assert block_to_block_type(markdown_block.strip()) == MarkdownBlockType.UO_LIST
+
+
+def test_block_to_block_type_ordered_list():
+    markdown_block = """
+1. This is a list
+2. with items
+    """
+    assert block_to_block_type(markdown_block.strip()) == MarkdownBlockType.O_LIST
+
+
+def test_block_to_block_type_quote():
+    markdown_block = """
+> This is a list
+> with items
+    """
+    assert block_to_block_type(markdown_block.strip()) == MarkdownBlockType.QUOTE
+
+
+def test_block_to_block_type_paragraph_dirty():
+    markdown_block = """
+This is a block with naughty syntax
+# with items
+    """
+    assert block_to_block_type(markdown_block.strip()) == MarkdownBlockType.PARAGRAPH
