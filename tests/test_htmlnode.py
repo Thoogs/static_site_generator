@@ -32,6 +32,12 @@ def test_htmlnode_repr():
     assert node.__repr__() == expected
 
 
+def test_htmlnode_eq():
+    node1 = HTMLNode(tag="p", value="Test for testing", children=[], props={})
+    node2 = HTMLNode(tag="p", value="Test for testing", children=[], props={})
+    assert node1 == node2
+
+
 def test_leafnode_no_tag_no_prop():
     value = "This is a test link"
     node = LeafNode(tag=None, value=value)
