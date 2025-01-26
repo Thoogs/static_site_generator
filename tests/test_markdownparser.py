@@ -392,6 +392,7 @@ With simple paragraph block
     code_child = ParentNode(
         tag="code", children=[LeafNode(None, 'print("hello parser")')]
     )
+    pre_child = ParentNode("pre", [code_child])
     quote_child = ParentNode(
         tag="blockquote",
         children=[
@@ -405,7 +406,7 @@ With simple paragraph block
     expected.children.append(paragraph_child)
     expected.children.append(unordered_child)
     expected.children.append(ordered_child)
-    expected.children.append(code_child)
+    expected.children.append(pre_child)
     expected.children.append(quote_child)
 
     assert markdown_to_html_node(markdown_block) == expected
@@ -428,6 +429,6 @@ With simple paragraph block
 > Sometimes code be, sometimes not
 > it can also **be bold** or *leaning*
 """
-    expected = '<div><h1>This is a test doc</h1><p>With simple paragraph block</p><ul><li>lists are also cool</li><li>with multiple items</li></ul><ol><li>sometimes they need order</li><li>and continue too</li></ol><code>print("hello parser")</code><blockquote>Sometimes code be, sometimes not\nit can also <b>be bold</b> or <i>leaning</i></blockquote></div>'
+    expected = '<div><h1>This is a test doc</h1><p>With simple paragraph block</p><ul><li>lists are also cool</li><li>with multiple items</li></ul><ol><li>sometimes they need order</li><li>and continue too</li></ol><pre><code>print("hello parser")</code></pre><blockquote>Sometimes code be, sometimes not\nit can also <b>be bold</b> or <i>leaning</i></blockquote></div>'
 
     assert markdown_to_html_node(markdown_block).to_html() == expected

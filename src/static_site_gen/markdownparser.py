@@ -184,10 +184,7 @@ def text_to_children(text):
 
 
 def convert_block_to_paragraph(markdown_block: str) -> ParentNode:
-    text_nodes = text_to_textnodes(markdown_block)
-    node_children = []
-    for text_node in text_nodes:
-        node_children.append(text_node_to_html_node(text_node))
+    node_children = text_to_children(markdown_block)
     paragraph_node = ParentNode("p", children=node_children)
     return paragraph_node
 
@@ -197,24 +194,19 @@ def convert_block_to_heading(markdown_block: str) -> ParentNode:
     heading_level = markdown_block.count("#", 0, 5)
     markdown_block = markdown_block.lstrip("# ")
 
-    text_nodes = text_to_textnodes(markdown_block)
-    node_children = []
-    for text_node in text_nodes:
-        node_children.append(text_node_to_html_node(text_node))
-    paragraph_node = ParentNode(f"h{heading_level}", children=node_children)
-    return paragraph_node
+    node_children = text_to_children(markdown_block)
+    heading_node = ParentNode(f"h{heading_level}", children=node_children)
+    return heading_node
 
 
 def convert_block_to_code(markdown_block: str) -> ParentNode:
     # Strip markdown code block characters
     markdown_block = markdown_block.strip("`")
 
-    text_nodes = text_to_textnodes(markdown_block)
-    node_children = []
-    for text_node in text_nodes:
-        node_children.append(text_node_to_html_node(text_node))
-    paragraph_node = ParentNode("code", children=node_children)
-    return paragraph_node
+    node_children = text_to_children(markdown_block)
+    code_node = ParentNode("pre", children=[])
+    code_node.children.append(ParentNode("code", children=node_children))
+    return code_node
 
 
 def convert_block_to_quote(markdown_block: str) -> ParentNode:
@@ -225,12 +217,9 @@ def convert_block_to_quote(markdown_block: str) -> ParentNode:
         markdown_lines[idx] = markdown_lines[idx].lstrip("> ")
         markdown_block_cleaned += markdown_lines[idx] + "\n"
 
-    text_nodes = text_to_textnodes(markdown_block_cleaned.strip())
-    node_children = []
-    for text_node in text_nodes:
-        node_children.append(text_node_to_html_node(text_node))
-    paragraph_node = ParentNode("blockquote", children=node_children)
-    return paragraph_node
+    node_children = text_to_children(markdown_block_cleaned.strip())
+    quote_node = ParentNode("blockquote", children=node_children)
+    return quote_node
 
 
 def convert_block_to_list(markdown_block: str, ordered: bool = False) -> ParentNode:
@@ -252,10 +241,10 @@ def convert_block_to_list(markdown_block: str, ordered: bool = False) -> ParentN
 
     # Create appropriate parent node
     if ordered:
-        paragraph_node = ParentNode("ol", children=html_items)
+        list_node = ParentNode("ol", children=html_items)
     if not ordered:
-        paragraph_node = ParentNode("ul", children=html_items)
-    return paragraph_node
+        list_node = ParentNode("ul", children=html_items)
+    return list_node
 
 
 def markdown_to_html_node(markdown: str) -> ParentNode:
