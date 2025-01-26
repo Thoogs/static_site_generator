@@ -1,15 +1,17 @@
 import pytest
 
+from static_site_gen.htmlnode import LeafNode, ParentNode
 from static_site_gen.markdownparser import (
-    split_nodes_delimiter,
+    MarkdownBlockType,
+    block_to_block_type,
     extract_markdown_images,
     extract_markdown_links,
+    markdown_to_blocks,
+    markdown_to_html_node,
+    split_nodes_delimiter,
     split_nodes_images,
     split_nodes_links,
     text_to_textnodes,
-    markdown_to_blocks,
-    block_to_block_type,
-    MarkdownBlockType,
 )
 from static_site_gen.textnode import TextNode, TextType
 
@@ -278,7 +280,7 @@ This is the same paragraph on a new line
 
 * This is a list
 * with items
-    """
+"""
     expected = [
         "This is **bolded** paragraph",
         "This is another paragraph with *italic* text and `code` here\nThis is the same paragraph on a new line",
@@ -297,7 +299,7 @@ def test_block_to_block_type():
 def test_block_to_block_type_code():
     markdown_block = """
 ```print('hello world')```
-    """
+"""
     assert block_to_block_type(markdown_block.strip()) == MarkdownBlockType.CODE
 
 
@@ -305,7 +307,7 @@ def test_block_to_block_type_unordered_list():
     markdown_block = """
 * This is a list
 * with items
-    """
+"""
     assert block_to_block_type(markdown_block.strip()) == MarkdownBlockType.UO_LIST
 
 
@@ -313,7 +315,7 @@ def test_block_to_block_type_ordered_list():
     markdown_block = """
 1. This is a list
 2. with items
-    """
+"""
     assert block_to_block_type(markdown_block.strip()) == MarkdownBlockType.O_LIST
 
 
@@ -321,7 +323,7 @@ def test_block_to_block_type_quote():
     markdown_block = """
 > This is a list
 > with items
-    """
+"""
     assert block_to_block_type(markdown_block.strip()) == MarkdownBlockType.QUOTE
 
 
@@ -329,5 +331,103 @@ def test_block_to_block_type_paragraph_dirty():
     markdown_block = """
 This is a block with naughty syntax
 # with items
-    """
+"""
     assert block_to_block_type(markdown_block.strip()) == MarkdownBlockType.PARAGRAPH
+
+
+def test_markdown_to_html_node():
+    markdown_block = """
+# This is a test doc
+
+With simple paragraph block
+"""
+    expected = ParentNode("div", children=[])
+    expected_child_1 = ParentNode(
+        tag="h1", children=[LeafNode(None, "This is a test doc")]
+    )
+    expected_child_2 = ParentNode(
+        tag="p", children=[LeafNode(None, "With simple paragraph block")]
+    )
+    expected.children.append(expected_child_1)
+    expected.children.append(expected_child_2)
+    assert markdown_to_html_node(markdown_block) == expected
+
+
+def test_markdown_to_html_node_with_many_blocks():
+    markdown_block = """
+# This is a test doc
+
+With simple paragraph block
+
+* lists are also cool
+* with multiple items
+
+1. sometimes they need order
+2. and continue too
+
+```print("hello parser")```
+
+> Sometimes code be, sometimes not
+> it can also **be bold** or *leaning*
+"""
+    expected = ParentNode("div", children=[])
+    header_child = ParentNode(tag="h1", children=[LeafNode(None, "This is a test doc")])
+    paragraph_child = ParentNode(
+        tag="p", children=[LeafNode(None, "With simple paragraph block")]
+    )
+    unordered_child = ParentNode(
+        tag="ul",
+        children=[
+            ParentNode("li", [LeafNode(tag=None, value="lists are also cool")]),
+            ParentNode("li", [LeafNode(tag=None, value="with multiple items")]),
+        ],
+    )
+    ordered_child = ParentNode(
+        tag="ol",
+        children=[
+            ParentNode("li", [LeafNode(tag=None, value="sometimes they need order")]),
+            ParentNode("li", [LeafNode(tag=None, value="and continue too")]),
+        ],
+    )
+    code_child = ParentNode(
+        tag="code", children=[LeafNode(None, 'print("hello parser")')]
+    )
+    quote_child = ParentNode(
+        tag="blockquote",
+        children=[
+            LeafNode(None, "Sometimes code be, sometimes not\nit can also "),
+            LeafNode("b", "be bold"),
+            LeafNode(None, " or "),
+            LeafNode("i", "leaning"),
+        ],
+    )
+    expected.children.append(header_child)
+    expected.children.append(paragraph_child)
+    expected.children.append(unordered_child)
+    expected.children.append(ordered_child)
+    expected.children.append(code_child)
+    expected.children.append(quote_child)
+
+    assert markdown_to_html_node(markdown_block) == expected
+
+
+def test_markdown_to_html_code():
+    markdown_block = """
+# This is a test doc
+
+With simple paragraph block
+
+* lists are also cool
+* with multiple items
+
+1. sometimes they need order
+2. and continue too
+
+```print("hello parser")```
+
+> Sometimes code be, sometimes not
+> it can also **be bold** or *leaning*
+"""
+    expected = '<div><h1>This is a test doc</h1><p>With simple paragraph block</p><ul><li>lists are also cool</li><li>with multiple items</li></ul><ol><li>sometimes they need order</li><li>and continue too</li></ol><code>print("hello parser")</code><blockquote>Sometimes code be, sometimes not\nit can also <b>be bold</b> or <i>leaning</i></blockquote></div>'
+
+    assert markdown_to_html_node(markdown_block).to_html() == expected

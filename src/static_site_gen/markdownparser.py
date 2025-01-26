@@ -1,7 +1,8 @@
 import re
 from enum import Enum
 
-from static_site_gen.textnode import TextType, TextNode
+from static_site_gen.htmlnode import ParentNode
+from static_site_gen.textnode import TextNode, TextType, text_node_to_html_node
 
 
 class MarkdownBlockType(Enum):
@@ -160,7 +161,6 @@ def is_quote(markdown_block: str) -> bool:
 
 def is_unordered_list(markdown_block: str) -> bool:
     for line in markdown_block.split("\n"):
-        print(line)
         if not line.startswith("- ") and not line.startswith("* "):
             return False
     return True
@@ -169,6 +169,116 @@ def is_unordered_list(markdown_block: str) -> bool:
 def is_ordered_list(markdown_block: str) -> bool:
     markdown_lines = markdown_block.split("\n")
     for idx in range(len(markdown_lines)):
-        if not markdown_lines[idx].startswith(f"{idx+1}. "):
+        if not markdown_lines[idx].startswith(f"{idx + 1}. "):
             return False
     return True
+
+
+def text_to_children(text):
+    text_nodes = text_to_textnodes(text)
+    children = []
+    for text_node in text_nodes:
+        html_node = text_node_to_html_node(text_node)
+        children.append(html_node)
+    return children
+
+
+def convert_block_to_paragraph(markdown_block: str) -> ParentNode:
+    text_nodes = text_to_textnodes(markdown_block)
+    node_children = []
+    for text_node in text_nodes:
+        node_children.append(text_node_to_html_node(text_node))
+    paragraph_node = ParentNode("p", children=node_children)
+    return paragraph_node
+
+
+def convert_block_to_heading(markdown_block: str) -> ParentNode:
+    # Count heading level and strip markdown characters
+    heading_level = markdown_block.count("#", 0, 5)
+    markdown_block = markdown_block.lstrip("# ")
+
+    text_nodes = text_to_textnodes(markdown_block)
+    node_children = []
+    for text_node in text_nodes:
+        node_children.append(text_node_to_html_node(text_node))
+    paragraph_node = ParentNode(f"h{heading_level}", children=node_children)
+    return paragraph_node
+
+
+def convert_block_to_code(markdown_block: str) -> ParentNode:
+    # Strip markdown code block characters
+    markdown_block = markdown_block.strip("`")
+
+    text_nodes = text_to_textnodes(markdown_block)
+    node_children = []
+    for text_node in text_nodes:
+        node_children.append(text_node_to_html_node(text_node))
+    paragraph_node = ParentNode("code", children=node_children)
+    return paragraph_node
+
+
+def convert_block_to_quote(markdown_block: str) -> ParentNode:
+    # Strip markdown quote block characters
+    markdown_lines = markdown_block.split("\n")
+    markdown_block_cleaned = ""
+    for idx in range(0, len(markdown_lines)):
+        markdown_lines[idx] = markdown_lines[idx].lstrip("> ")
+        markdown_block_cleaned += markdown_lines[idx] + "\n"
+
+    text_nodes = text_to_textnodes(markdown_block_cleaned.strip())
+    node_children = []
+    for text_node in text_nodes:
+        node_children.append(text_node_to_html_node(text_node))
+    paragraph_node = ParentNode("blockquote", children=node_children)
+    return paragraph_node
+
+
+def convert_block_to_list(markdown_block: str, ordered: bool = False) -> ParentNode:
+    # Strip markdown list characters
+    markdown_lines = markdown_block.split("\n")
+    markdown_block_cleaned = ""
+    for idx in range(0, len(markdown_lines)):
+        if not ordered:
+            markdown_lines[idx] = markdown_lines[idx].lstrip("*- ")
+        if ordered:
+            markdown_lines[idx] = markdown_lines[idx].lstrip(f"{idx + 1}. ")
+        markdown_block_cleaned += markdown_lines[idx] + "\n"
+
+    items = markdown_block_cleaned.strip().split("\n")
+    html_items = []
+    for item in items:
+        children = text_to_children(item)
+        html_items.append(ParentNode("li", children))
+
+    # Create appropriate parent node
+    if ordered:
+        paragraph_node = ParentNode("ol", children=html_items)
+    if not ordered:
+        paragraph_node = ParentNode("ul", children=html_items)
+    return paragraph_node
+
+
+def markdown_to_html_node(markdown: str) -> ParentNode:
+    document_node = ParentNode("div", children=[])
+    markdown_blocks = markdown_to_blocks(markdown)
+    for markdown_block in markdown_blocks:
+        block_type = block_to_block_type(markdown_block)
+        match block_type:
+            case MarkdownBlockType.PARAGRAPH:
+                document_node.children.append(
+                    convert_block_to_paragraph(markdown_block)
+                )
+            case MarkdownBlockType.HEADING:
+                document_node.children.append(convert_block_to_heading(markdown_block))
+            case MarkdownBlockType.CODE:
+                document_node.children.append(convert_block_to_code(markdown_block))
+            case MarkdownBlockType.QUOTE:
+                document_node.children.append(convert_block_to_quote(markdown_block))
+            case MarkdownBlockType.UO_LIST:
+                document_node.children.append(convert_block_to_list(markdown_block))
+            case MarkdownBlockType.O_LIST:
+                document_node.children.append(
+                    convert_block_to_list(markdown_block, ordered=True)
+                )
+    print(document_node)
+    return document_node
