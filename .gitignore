@@ -1,3 +1,4 @@
 # Ignore everythin in pycache
 __pycache__/
 .venv/
+public/
