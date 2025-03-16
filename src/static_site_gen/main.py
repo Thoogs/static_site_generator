@@ -1,9 +1,8 @@
-from textnode import TextNode, TextType
+from static_site_gen.file_handler import copy_files_recursive
 
 
 def main():
-    node = TextNode("This is a text node", TextType.MD_BOLD, "https://www.boot.dev")
-    print(node)
+    copy_files_recursive("./static", "./public")
 
 
 if __name__ == "__main__":
