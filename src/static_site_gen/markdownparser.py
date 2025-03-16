@@ -24,6 +24,7 @@ def split_nodes_delimiter(old_nodes: list, delimiter: str, text_type: TextType) 
         sections = node.text.split(delimiter)
         # Delimiter needs to have matching pair to be valid markdown
         if len(sections) % 2 == 0:
+            print(sections)
             raise SyntaxError("Invalid markdown syntax")
         # each section needs to be converted to node
         for idx in range(len(sections)):
@@ -228,7 +229,7 @@ def convert_block_to_list(markdown_block: str, ordered: bool = False) -> ParentN
     markdown_block_cleaned = ""
     for idx in range(0, len(markdown_lines)):
         if not ordered:
-            markdown_lines[idx] = markdown_lines[idx].lstrip("*- ")
+            markdown_lines[idx] = markdown_lines[idx].lstrip("- ")
         if ordered:
             markdown_lines[idx] = markdown_lines[idx].lstrip(f"{idx + 1}. ")
         markdown_block_cleaned += markdown_lines[idx] + "\n"
