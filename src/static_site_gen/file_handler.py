@@ -20,6 +20,7 @@ def copy_files_recursive(source_dir_path, dest_dir_path):
 
 
 def generate_page(from_path: str, template_path: str, dest_path: str):
+    """Generates html pages based on the template by populating it's content from markdown file."""
     print(f"generating page from {from_path} to {dest_path} using {template_path}")
     with open(from_path, "r") as from_file:
         markdown = from_file.read()
@@ -35,3 +36,20 @@ def generate_page(from_path: str, template_path: str, dest_path: str):
         os.makedirs(dest_dir)
     with open(dest_path, "w") as dest_file:
         dest_file.write(template)
+
+
+def generate_pages_recursive(
+    dir_path_content: str, template_path: str, dest_dir_path: str
+):
+    if not os.path.exists(dir_path_content):
+        raise Exception("Content directory does not exist.")
+
+    for filename in os.listdir(dir_path_content):
+        from_path = os.path.join(dir_path_content, filename)
+        dest_path = os.path.join(dest_dir_path, filename)
+        print(f" * {from_path} -> {dest_path}")
+        if os.path.isfile(from_path):
+            dest_path = dest_path.replace(".md", ".html")
+            generate_page(from_path, template_path, dest_path)
+        else:
+            generate_pages_recursive(from_path, template_path, dest_path)
