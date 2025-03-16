@@ -49,7 +49,7 @@ def test_split_nodes_delimiter_code():
 def test_split_nodes_delimiter_bold_and_italic():
     old_node = [
         TextNode(
-            "This is text with a **bolded phrase** in *the* middle", TextType.MD_TEXT
+            "This is text with a **bolded phrase** in _the_ middle", TextType.MD_TEXT
         )
     ]
     delimiter = "**"
@@ -62,7 +62,7 @@ def test_split_nodes_delimiter_bold_and_italic():
     ]
 
     nodes = split_nodes_delimiter(old_node, delimiter, TextType.MD_BOLD)
-    delimiter = "*"
+    delimiter = "_"
     nodes = split_nodes_delimiter(nodes, delimiter, TextType.MD_ITALIC)
     assert nodes == expected
 
@@ -233,7 +233,7 @@ def test_split_nodes_single_image_node():
 
 
 def test_text_to_textnode():
-    text = "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+    text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
     new_nodes = text_to_textnodes(text)
     expected = [
         TextNode("This is ", TextType.MD_TEXT),
@@ -276,7 +276,7 @@ def test_markdown_to_blocks_multiline_str():
     markdown_doc = """
 This is **bolded** paragraph
 
-This is another paragraph with *italic* text and `code` here
+This is another paragraph with _italic_ text and `code` here
 This is the same paragraph on a new line
 
 * This is a list
@@ -284,7 +284,7 @@ This is the same paragraph on a new line
 """
     expected = [
         "This is **bolded** paragraph",
-        "This is another paragraph with *italic* text and `code` here\nThis is the same paragraph on a new line",
+        "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
         "* This is a list\n* with items",
     ]
     assert markdown_to_blocks(markdown_doc) == expected
@@ -354,6 +354,29 @@ With simple paragraph block
     assert markdown_to_html_node(markdown_block) == expected
 
 
+def text_markdown_to_quote_with_whitespace():
+    markdown_block = """
+> Sometimes code be, sometimes not
+> 
+> it can also be bold or leaning
+"""
+    expected = ParentNode("div", children=[])
+    quote_child = ParentNode(
+        tag="blockquote",
+        children=[
+            LeafNode(
+                None,
+                "Sometimes code be, sometimes not\n \nit can also be bold or leaning",
+            ),
+        ],
+    )
+    expected.children.append(quote_child)
+    assert markdown_to_html_node(markdown_block) == expected
+    html_node = markdown_to_html_node(markdown_block)
+    expected = "<div><blockquote>Sometimes code be, sometimes not\nit can also be bold or leaning</blockquote></div>"
+    assert html_node.to_html() == expected
+
+
 def test_markdown_to_html_node_with_many_blocks():
     markdown_block = """
 # This is a test doc
@@ -369,7 +392,7 @@ With simple paragraph block
 ```print("hello parser")```
 
 > Sometimes code be, sometimes not
-> it can also **be bold** or *leaning*
+> it can also **be bold** or _leaning_
 """
     expected = ParentNode("div", children=[])
     header_child = ParentNode(tag="h1", children=[LeafNode(None, "This is a test doc")])
@@ -428,7 +451,7 @@ With simple paragraph block
 ```print("hello parser")```
 
 > Sometimes code be, sometimes not
-> it can also **be bold** or *leaning*
+> it can also **be bold** or _leaning_
 """
     expected = '<div><h1>This is a test doc</h1><p>With simple paragraph block</p><ul><li>lists are also cool</li><li>with multiple items</li></ul><ol><li>sometimes they need order</li><li>and continue too</li></ol><pre><code>print("hello parser")</code></pre><blockquote>Sometimes code be, sometimes not\nit can also <b>be bold</b> or <i>leaning</i></blockquote></div>'
 

@@ -110,7 +110,7 @@ def text_to_textnodes(inline_markdown: str) -> list:
     textnodes = split_nodes_links(textnodes)
     textnodes = split_nodes_images(textnodes)
     textnodes = split_nodes_delimiter(textnodes, "**", TextType.MD_BOLD)
-    textnodes = split_nodes_delimiter(textnodes, "*", TextType.MD_ITALIC)
+    textnodes = split_nodes_delimiter(textnodes, "_", TextType.MD_ITALIC)
     textnodes = split_nodes_delimiter(textnodes, "`", TextType.MD_CODE)
     return textnodes
 
@@ -154,7 +154,7 @@ def is_code(markdown_block: str) -> bool:
 
 def is_quote(markdown_block: str) -> bool:
     for line in markdown_block.split("\n"):
-        if not line.startswith("> "):
+        if not line.startswith(">"):
             return False
     return True
 
