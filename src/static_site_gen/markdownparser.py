@@ -269,5 +269,21 @@ def markdown_to_html_node(markdown: str) -> ParentNode:
                 document_node.children.append(
                     convert_block_to_list(markdown_block, ordered=True)
                 )
-    print(document_node)
     return document_node
+
+
+def extract_title(markdown: str) -> str:
+    markdown = markdown.strip()
+    markdown_lines = markdown.split("\n")
+    heading_pattern = r"^#\s+(.*)$"
+    for line in markdown_lines:
+        heading = re.findall(heading_pattern, line)
+        if len(heading) != 0:
+            break
+    if len(heading) == 0:
+        raise Exception("Document is missing h1 header.")
+    # extract the first heading 1 from document, we expect there are no more than 1
+    heading = heading[0]
+    heading = heading.lstrip("# ")
+    heading = heading.strip()
+    return heading

@@ -12,6 +12,7 @@ from static_site_gen.markdownparser import (
     split_nodes_images,
     split_nodes_links,
     text_to_textnodes,
+    extract_title,
 )
 from static_site_gen.textnode import TextNode, TextType
 
@@ -432,3 +433,36 @@ With simple paragraph block
     expected = '<div><h1>This is a test doc</h1><p>With simple paragraph block</p><ul><li>lists are also cool</li><li>with multiple items</li></ul><ol><li>sometimes they need order</li><li>and continue too</li></ol><pre><code>print("hello parser")</code></pre><blockquote>Sometimes code be, sometimes not\nit can also <b>be bold</b> or <i>leaning</i></blockquote></div>'
 
     assert markdown_to_html_node(markdown_block).to_html() == expected
+
+
+def test_extract_title():
+    markdown = """
+# This is a document
+
+with some paragraph too
+but only the heading should come.
+"""
+    assert extract_title(markdown) == "This is a document"
+
+
+def test_extract_title_no_heading():
+    markdown = """
+ This is a document
+
+with some paragraph too
+but only the heading should come.
+"""
+    with pytest.raises(Exception, match="Document is missing h1 header."):
+        extract_title(markdown)
+
+
+def test_extract_title_only_first():
+    markdown = """
+# This is a document
+
+# with multiple title
+
+with some paragraph too
+but only the heading should come.
+"""
+    assert extract_title(markdown) == "This is a document"

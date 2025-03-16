@@ -1,6 +1,9 @@
 import os
 import shutil
 
+from static_site_gen.markdownparser import markdown_to_html_node
+from static_site_gen.markdownparser import extract_title
+
 
 def copy_files_recursive(source_dir_path, dest_dir_path):
     if not os.path.exists(dest_dir_path):
@@ -14,3 +17,21 @@ def copy_files_recursive(source_dir_path, dest_dir_path):
             shutil.copy(from_path, dest_path)
         else:
             copy_files_recursive(from_path, dest_path)
+
+
+def generate_page(from_path: str, template_path: str, dest_path: str):
+    print(f"generating page from {from_path} to {dest_path} using {template_path}")
+    with open(from_path, "r") as from_file:
+        markdown = from_file.read()
+    with open(template_path, "r") as template_file:
+        template = template_file.read()
+    html_obj = markdown_to_html_node(markdown)
+    html = html_obj.to_html()
+    title = extract_title(markdown)
+    template = template.replace("{{ Title }}", title)
+    template = template.replace("{{ Content }}", html)
+    dest_dir = os.path.dirname(dest_path)
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
+    with open(dest_path, "w") as dest_file:
+        dest_file.write(template)

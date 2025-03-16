@@ -43,6 +43,8 @@ class LeafNode(HTMLNode):
             raise ValueError("LeafNode must have value")
         if self.props is not None and self.tag is None:
             raise ValueError("LeafNode with props requires a tag.")
+        if self.tag == "img":
+            return f"<{self.tag}{self.props_to_html()} />"
         if self.props is None:
             if self.tag is None:
                 return f"{self.value}"
