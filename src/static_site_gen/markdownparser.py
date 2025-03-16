@@ -24,7 +24,6 @@ def split_nodes_delimiter(old_nodes: list, delimiter: str, text_type: TextType) 
         sections = node.text.split(delimiter)
         # Delimiter needs to have matching pair to be valid markdown
         if len(sections) % 2 == 0:
-            print(sections)
             raise SyntaxError("Invalid markdown syntax")
         # each section needs to be converted to node
         for idx in range(len(sections)):
