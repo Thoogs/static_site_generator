@@ -253,21 +253,21 @@ def test_text_to_textnode():
 
 
 def test_markdown_to_blocks():
-    markdown_doc = "# heading\n\nParagraph text within the document\nThat can span multiple lines\n\n* list item 1\n* list item 2\n"
+    markdown_doc = "# heading\n\nParagraph text within the document\nThat can span multiple lines\n\n- list item 1\n- list item 2\n"
     expected = [
         "# heading",
         "Paragraph text within the document\nThat can span multiple lines",
-        "* list item 1\n* list item 2",
+        "- list item 1\n- list item 2",
     ]
     assert markdown_to_blocks(markdown_doc) == expected
 
 
 def test_markdown_to_blocks_extra_newlines_and_space():
-    markdown_doc = "# heading\n\n\n\n\n     Paragraph text within the document\nThat can span multiple lines                  \n\n* list item 1\n* list item 2\n"
+    markdown_doc = "# heading\n\n\n\n\n     Paragraph text within the document\nThat can span multiple lines                  \n\n- list item 1\n- list item 2\n"
     expected = [
         "# heading",
         "Paragraph text within the document\nThat can span multiple lines",
-        "* list item 1\n* list item 2",
+        "- list item 1\n- list item 2",
     ]
     assert markdown_to_blocks(markdown_doc) == expected
 
@@ -279,13 +279,13 @@ This is **bolded** paragraph
 This is another paragraph with _italic_ text and `code` here
 This is the same paragraph on a new line
 
-* This is a list
-* with items
+- This is a list
+- with items
 """
     expected = [
         "This is **bolded** paragraph",
         "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
-        "* This is a list\n* with items",
+        "- This is a list\n- with items",
     ]
     assert markdown_to_blocks(markdown_doc) == expected
 
@@ -306,8 +306,8 @@ def test_block_to_block_type_code():
 
 def test_block_to_block_type_unordered_list():
     markdown_block = """
-* This is a list
-* with items
+- This is a list
+- with items
 """
     assert block_to_block_type(markdown_block.strip()) == MarkdownBlockType.UO_LIST
 
@@ -383,8 +383,8 @@ def test_markdown_to_html_node_with_many_blocks():
 
 With simple paragraph block
 
-* lists are also cool
-* with multiple items
+- lists are also cool
+- with multiple items
 
 1. sometimes they need order
 2. and continue too
@@ -442,8 +442,8 @@ def test_markdown_to_html_code():
 
 With simple paragraph block
 
-* lists are also cool
-* with multiple items
+- lists are also cool
+- with multiple items
 
 1. sometimes they need order
 2. and continue too
